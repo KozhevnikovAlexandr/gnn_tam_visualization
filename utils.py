@@ -1,4 +1,6 @@
 fault_decrition_baseline = [
+    {'Description': 'Normal Feed', 
+     'TPR Baseline': 0.994},
     {'Description': 'A/C feed ratio, B composition constant (stream 4)', 
      'TPR Baseline': 0.994},
     {'Description': 'B composition, A/C ration constant (stream 4)',
@@ -47,16 +49,13 @@ fault_decrition_baseline = [
      'TPR Baseline': 0.992},
     ]
 
+import pandas as pd
+
 
 def get_baseline_metrics():
-    result = []
-    for i in range(28):
-        name = fault_decrition_baseline[i]
-        name['Fault №'] = i + 1
-        name['TPR New'] = name['TPR Baseline']
-        name['Diff'] = 0.0
-        result.append(name)
-    return result
+    baseline_df = pd.read_csv('/home/akozhevnikov/graphs/gnn_tam_visualization/metrics.csv')
+    return baseline_df.to_dict('records')
+
 
 nodes_description = [
     {'node_id' : 1, 'color':0, 'shape':0},
@@ -113,8 +112,15 @@ nodes_description = [
     {'node_id' : 52, 'color':0, 'shape':1},
 ]
 
-colors = {0: 'rgb(113, 186, 255)', 1: 'rgb(51, 153, 0)', 2: 'rgb(255, 213, 0)', 3: 'rgb(255, 109, 84)', 4: 'rgb(153, 113, 194)', 5: 'rgb(192, 192, 192)'}
-shapes = {0: 'box', 1: 'dot'}
+colors = {0: 'rgb(113, 186, 255)', 
+          1: 'rgb(51, 153, 0)', 
+          2: 'rgb(255, 213, 0)', 
+          3: 'rgb(255, 109, 84)', 
+          4: 'rgb(153, 113, 194)', 
+          5: 'rgb(192, 192, 192)'}
+
+shapes = {0: 'box', 
+          1: 'dot'}
 
 def get_node_color_and_shape(node_id):
     return (colors[nodes_description[node_id]['color']], shapes[nodes_description[node_id]['shape']])

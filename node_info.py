@@ -2,7 +2,7 @@ import numpy as np
 
 from utils import get_baseline_metrics
 
-importance_matrix = np.load('class_wise_node_importance.npy')
+importance_matrix = np.load('class_wise_node_importance_trained.npy')
 baseline_metrics = get_baseline_metrics()
 
 node_names = ['A feed (stream 1)',
@@ -63,5 +63,5 @@ def get_node_info(node_id, topk=3):
     result = f'{node_names[node_id]} \n \n Most significant faluts:'
     top_importance = np.argpartition(importance_matrix[:,node_id], -topk)[-topk:].tolist()
     for ind, i in enumerate(top_importance):
-        result += f'\n {ind}. {baseline_metrics[i]["Description"]} -- {round(float(importance_matrix[:,node_id][i]), 2)}'
+        result += f'\n {i}. {baseline_metrics[i]["Description"]} -- {round(float(importance_matrix[:,node_id][i]), 2)}'
     return result

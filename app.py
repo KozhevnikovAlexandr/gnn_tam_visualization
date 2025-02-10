@@ -1,39 +1,53 @@
 import streamlit as st
-import networkx as nx
 from pyvis.network import Network
 import torch
 import sys
 import pandas as pd
 import plotly.express as px
 
-from falut_metrics import get_metric_without_node
+from falut_metrics import get_importance, get_metric_without_node
 from utils import get_baseline_metrics, get_node_color_and_shape
 from node_info import get_node_info
 
 sys.path.append('/home/akozhevnikov/graphs/gnn-tam')
 
+top_k_nodes = 2
 
 def create_visualization(nodes_to_zeros=[]):
-    model_path = '/home/akozhevnikov/graphs/gnn-tam/saved_models/gnn1.pt'
-    model = torch.load(model_path, weights_only=False).cpu()
-    adj = torch.relu(model.gsl[0].gsl_layer.A)
-    mask = torch.zeros(52, 52)
-    mask.fill_(0.0)
-    v, id = (adj + torch.rand_like(adj)*0.01).topk(1, 1)
-    mask.scatter_(1, id, v.fill_(1))
-    adj = adj*mask
-    adj = adj * (1 - torch.eye(52))
-    
+    device = torch.device("cpu")
+
+    model_path = '/home/akozhevnikov/graphs/gnn_tam_visualization/gnn1_directed.pt'
+    model = torch.load(model_path, map_location=device, weights_only=False).eval()
+    n_nodes = model.idx.size(0)
+    idx = torch.arange(n_nodes, device=device)
+    gsl_module = model.gsl[0]
+
+    with torch.no_grad():
+        adj = gsl_module.gsl_layer(idx).to(device)
+        mask = torch.zeros_like(adj).to(device)
+        
+        v, indices = (adj).topk(top_k_nodes, dim=1)
+        indices = indices.to(device)
+        mask.scatter_(1, indices, 1)
+        adj = adj * mask
+        adj = adj * (1 - torch.eye(n_nodes, device=device))
+        
     for node_id in nodes_to_zeros:
         node_id -= 1
         adj[node_id] = torch.zeros_like(adj[node_id])
         adj[:, node_id] = torch.zeros_like(adj[node_id])
     
-    net = Network(notebook=True, directed=True, cdn_resources='in_line')
+    net = Network(notebook=True, directed=True, cdn_resources='in_line', neighborhood_highlight=True, select_menu=True)
     for node in range(adj.shape[0]):
         color, shape = get_node_color_and_shape(node)
         size = 20 if shape == 'box' else 13
-        net.add_node(node, label=str(node+1), physics=False, title=get_node_info(node), color=color, shape=shape, size=size)
+        node_info = get_node_info(node)
+        if node+1 in nodes_to_zeros:
+            node_info = f'This node is disabled\n\n{node_info}'
+            color = 'red'
+            shape = 'triangle'
+        
+        net.add_node(node, label=str(node+1), physics=False, title=node_info, color=color, shape=shape, size=size)
     
     for node in range(adj.shape[0]):
         for node2 in range(adj.shape[0]):
@@ -47,18 +61,21 @@ def calculate_metrics(baseline_metrics, turn_off_node=None):
         for i in baseline_metrics:
             i['TPR New'] = i['TPR Baseline']
             i['Diff'] = 0.0
+            i['Disabled Node Importance'] = 0.0
     else:
         metric_without_node = get_metric_without_node(turn_off_node)
+        imp = get_importance(turn_off_node)
         for idx, i in enumerate(baseline_metrics):
             i['TPR New'] = metric_without_node[idx]
             i['Diff'] = round(i['TPR New'] - i['TPR Baseline'], 3)
+            i['Disabled Node Importance'] = float(imp[idx])
     return baseline_metrics
 
 def main():
-    #st.set_page_config(layout="wide")
+    st.set_page_config(layout="wide")
 
     st.title("Graph Visualization with Metrics")
-    
+
     if 'disabled_nodes' not in st.session_state:
         st.session_state.disabled_nodes = []
     
@@ -74,7 +91,9 @@ def main():
         placeholder="Choose a node to disable"
     )
     
+    flag = False
     if st.button("Disable Node"):
+        flag = True
         if selected_node is not None:
             st.session_state.disabled_nodes = [selected_node]
             st.session_state.metrics = calculate_metrics(get_baseline_metrics(), turn_off_node=selected_node)
@@ -98,40 +117,66 @@ def main():
     """
     st.components.v1.html(html, height=800)
     
+    if flag:
+        st.header("TPR Distribution Comparison")
+        df = pd.DataFrame(st.session_state.metrics)
+        df['diff_minus'] = -df['Diff']
+        
+        fig = px.bar(
+            df,
+            x='Fault №',
+            y=['diff_minus'],
+            barmode='overlay',
+            title='Comparison of TPR Baseline vs TPR New',
+            labels={'value': 'TPR Value', 'variable': 'Metric Type'},
+            hover_data=['Description']
+        )
+        
+        fig.update_layout(
+            xaxis_title='Fault Number',
+            yaxis_title='TPR',
+            xaxis={'type': 'category'},
+            hovermode='x unified',
+            showlegend=False,
+        )
+    
+    else:
+        st.header("TPR Distribution Comparison")
+        baseline = pd.DataFrame(get_baseline_metrics())
+        fig = px.bar(
+            baseline,
+            x='Fault №',
+            y=['TPR Baseline'],
+            barmode='overlay',
+            title='TPR for each fault type with all nodes',
+            labels={'value': 'TPR Value', 'variable': 'Metric Type'},
+            hover_data=['Description']
+        )
+        
+        fig.update_layout(
+            xaxis_title='Fault Number',
+            yaxis_title='TPR',
+            xaxis={'type': 'category'},
+            hovermode='x unified',
+            showlegend=False,
+        )
+    st.plotly_chart(fig, use_container_width=True)
+
     st.header("Metrics")
     metrics = st.session_state.metrics
     
-    cols = st.columns(5)
-    headers = ["Fault №", "Description", "TPR Baseline", "TPR New", "Diff"]
+    cols = st.columns(6)
+    headers = ["Fault №", "Description", "TPR Baseline", "TPR New", "Diff", "Disabled Node Importance"]
     for col, header in zip(cols, headers):
         col.write(f"**{header}**")
     
     for metric in metrics:
-        cols = st.columns(5)
+        cols = st.columns(6)
         for i, header in enumerate(headers):
-            cols[i].write(metric[header])
+            value = metric[header]
+            if isinstance(value, float):
+                value = round(value, 3)
+            cols[i].write(value)
     
-    st.header("TPR Distribution Comparison")
-    df = pd.DataFrame(st.session_state.metrics)
-    df['diff_minus'] = -df['Diff']
-    
-    fig = px.bar(
-        df,
-        x='Fault №',
-        y=['diff_minus'],
-        barmode='overlay',
-        title='Comparison of TPR Baseline vs TPR New',
-        labels={'value': 'TPR Value', 'variable': 'Metric Type'},
-        hover_data=['Description']
-    )
-    
-    fig.update_layout(
-        xaxis_title='Fault Number',
-        yaxis_title='TPR',
-        xaxis={'type': 'category'},
-        hovermode='x unified'
-    )
-    
-    st.plotly_chart(fig, use_container_width=True)
 if __name__ == "__main__":
     main()
