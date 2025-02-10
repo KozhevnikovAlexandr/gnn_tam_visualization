@@ -6,14 +6,14 @@ import pandas as pd
 import plotly.express as px
 
 from falut_metrics import get_importance, get_metric_without_node
-from utils import get_baseline_metrics, get_node_color_and_shape
+from utils import get_baseline_metrics, get_node_color_and_shape, colors, shapes
 from node_info import get_node_info
 
 sys.path.append('/home/akozhevnikov/graphs/gnn-tam')
 
-top_k_nodes = 2
+top_k_nodes_base = 2
 
-def create_visualization(nodes_to_zeros=[]):
+def create_visualization(nodes_to_zeros=[], top_k_nodes=2):
     device = torch.device("cpu")
 
     model_path = '/home/akozhevnikov/graphs/gnn_tam_visualization/gnn1_directed.pt'
@@ -37,7 +37,7 @@ def create_visualization(nodes_to_zeros=[]):
         adj[node_id] = torch.zeros_like(adj[node_id])
         adj[:, node_id] = torch.zeros_like(adj[node_id])
     
-    net = Network(notebook=True, directed=True, cdn_resources='in_line', neighborhood_highlight=True, select_menu=True)
+    net = Network(notebook=True, directed=True, cdn_resources='in_line', neighborhood_highlight=True, select_menu=False)
     for node in range(adj.shape[0]):
         color, shape = get_node_color_and_shape(node)
         size = 20 if shape == 'box' else 13
@@ -47,12 +47,13 @@ def create_visualization(nodes_to_zeros=[]):
             color = 'red'
             shape = 'triangle'
         
-        net.add_node(node, label=str(node+1), physics=False, title=node_info, color=color, shape=shape, size=size)
+        net.add_node(node, label=str(node+1), physics=True, title=node_info, color=color, shape=shape, size=size)
     
     for node in range(adj.shape[0]):
         for node2 in range(adj.shape[0]):
             if adj[node, node2]:
-                net.add_edge(node, node2, physics=False)
+                net.add_edge(node, node2, physics=True)
+    net.show_buttons(filter_=['physics'])
     
     return net
 
@@ -90,6 +91,18 @@ def main():
         index=None,
         placeholder="Choose a node to disable"
     )
+
+    selected_k = st.selectbox(
+        "Select top k important edges to show",
+        range(1, 6),
+        index=None,
+        placeholder="Choose k param"
+    )
+
+    if st.button("Change k"):
+        top_k_nodes=selected_k
+    else:
+        top_k_nodes=top_k_nodes_base
     
     flag = False
     if st.button("Disable Node"):
@@ -105,7 +118,7 @@ def main():
         st.session_state.disabled_nodes = []
         st.session_state.metrics = calculate_metrics(get_baseline_metrics(), turn_off_node=None)
     
-    net = create_visualization(st.session_state.disabled_nodes)
+    net = create_visualization(st.session_state.disabled_nodes, top_k_nodes=top_k_nodes)
     
     net.save_graph('graph.html')
     with open('graph.html', 'r', encoding='utf-8') as f:
@@ -116,6 +129,45 @@ def main():
     </div>
     """
     st.components.v1.html(html, height=800)
+
+    with st.expander("LEGEND", expanded=True):
+        col1, col2, col3 = st.columns([2,2,1])
+        
+        with col1:
+            st.markdown("**Node Colors**")
+            for color_key, color_value in colors.items():
+                st.markdown(f"""
+                <div style="display: flex; align-items: center; margin: -10px 0;">
+                    <div style="width: 20px; height: 20px; background-color: {color_value}; 
+                             margin-right: 10px; border: 1px solid #666;"></div>
+                    <span>{['Flow rate','Pressure','Level','Temperature','Composition','Other'][color_key]}</span>
+                </div>
+                """, unsafe_allow_html=True)
+        
+        with col2:
+            st.markdown("**Node Shapes**")
+            for shape_key, shape_value in shapes.items():
+                st.markdown(f"""
+                <div style="display: flex; align-items: center; margin: -10px 0;">
+                    <div style="width: 20px; height: 20px; margin-right: 10px;
+                             display: flex; justify-content: center; align-items: center;">
+                        <div style="width: 15px; height: 15px; 
+                                 border: 2px solid #333; background: {'none' if shape_value == 'box' else '#333'};
+                                 border-radius: {'0%' if shape_value == 'box' else '50%'};"></div>
+                    </div>
+                    <span>{['Process measurement','Manipulated Variables'][shape_key]}</span>
+                </div>
+                """, unsafe_allow_html=True)
+            
+            st.markdown("""
+            <div style="display: flex; align-items: center; margin: -10px 0;">
+                <div style="width: 20px; height: 20px; margin-right: 10px;
+                         display: flex; justify-content: center; align-items: center;">
+                    <span style="color: red; font-size: 24px;">▲</span>
+                </div>
+                <span style="color: red;">Disabled node</span>
+            </div>
+            """, unsafe_allow_html=True)
     
     if flag:
         st.header("TPR Distribution Comparison")
@@ -162,21 +214,9 @@ def main():
         )
     st.plotly_chart(fig, use_container_width=True)
 
-    st.header("Metrics")
-    metrics = st.session_state.metrics
-    
-    cols = st.columns(6)
-    headers = ["Fault №", "Description", "TPR Baseline", "TPR New", "Diff", "Disabled Node Importance"]
-    for col, header in zip(cols, headers):
-        col.write(f"**{header}**")
-    
-    for metric in metrics:
-        cols = st.columns(6)
-        for i, header in enumerate(headers):
-            value = metric[header]
-            if isinstance(value, float):
-                value = round(value, 3)
-            cols[i].write(value)
+    columns_to_show = ['Fault №', 'Description', 'Most important nodes', 'TPR Baseline', 'TPR New', 'Diff']
+    df_to_show = pd.DataFrame(st.session_state.metrics)[columns_to_show]
+    st.dataframe(df_to_show, use_container_width=True)
     
 if __name__ == "__main__":
     main()

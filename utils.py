@@ -1,59 +1,10 @@
-fault_decrition_baseline = [
-    {'Description': 'Normal Feed', 
-     'TPR Baseline': 0.994},
-    {'Description': 'A/C feed ratio, B composition constant (stream 4)', 
-     'TPR Baseline': 0.994},
-    {'Description': 'B composition, A/C ration constant (stream 4)',
-     'TPR Baseline': 0.997},
-    {'Description': 'D feed temperature (stream 2)',
-     'TPR Baseline': 0.992},
-    {'Description': 'Reactor cooling water inlet temperature',
-     'TPR Baseline': 0.972},
-    {'Description': 'Condenser cooling water inlet temperature',
-     'TPR Baseline': 0.998},
-    {'Description': 'A feed loss (stream 1)', 'TPR Baseline': 0.992},
-    {'Description': 'C header pressure loss - reduced availability',
-     'TPR Baseline': 0.999},
-    {'Description': 'A, B, C feed composition (stream 4)',
-     'TPR Baseline': 0.998},
-    {'Description': 'D feed temperature (stream 2)',
-     'TPR Baseline': 0.983},
-    {'Description': 'C feed temperature (stream 4)',
-     'TPR Baseline': 0.735},
-    {'Description': 'Reactor cooling water inlet temperature',
-     'TPR Baseline': 0.979},
-    {'Description': 'Condenser cooling water inlet temperature',
-     'TPR Baseline': 0.99},
-    {'Description': 'Reaction kinetics', 'TPR Baseline': 0.984},
-    {'Description': 'Reactor cooling water valve',
-     'TPR Baseline': 0.969},
-    {'Description': 'Condencer cooling water valve',
-     'TPR Baseline': 0.996},
-    {'Description': 'Unknown', 'TPR Baseline': 0.357},
-    {'Description': 'Unknown', 'TPR Baseline': 0.833},
-    {'Description': 'Unknown', 'TPR Baseline': 0.979},
-    {'Description': 'Unknown', 'TPR Baseline': 0.964},
-    {'Description': 'Unknown', 'TPR Baseline': 0.992},
-    {'Description': 'A feed (stream 1) temperature',
-     'TPR Baseline': 0.971},
-    {'Description': 'E feed (stream 3) temperature',
-     'TPR Baseline': 0.0},
-    {'Description': 'A feed flow (stream 1)', 'TPR Baseline': 0.501},
-    {'Description': 'D feed flow (stream 2)', 'TPR Baseline': 0.94},
-    {'Description': 'E feed flow (stream 3)', 'TPR Baseline': 0.985},
-    {'Description': 'A and C feed flow (stream 4)',
-     'TPR Baseline': 0.987},
-    {'Description': 'Reactor cooling water flow',
-     'TPR Baseline': 0.983},
-    {'Description': 'Condenser cooling water flow',
-     'TPR Baseline': 0.992},
-    ]
+
 
 import pandas as pd
 
 
 def get_baseline_metrics():
-    baseline_df = pd.read_csv('/home/akozhevnikov/graphs/gnn_tam_visualization/metrics.csv')
+    baseline_df = pd.read_csv('/home/akozhevnikov/graphs/gnn_tam_visualization/metrics2.csv')
     return baseline_df.to_dict('records')
 
 

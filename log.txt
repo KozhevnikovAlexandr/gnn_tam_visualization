@@ -1,0 +1,38 @@
+
+Collecting usage statistics. To deactivate, set browser.gatherUsageStats to false.
+
+
+  You can now view your Streamlit app in your browser.
+
+  Local URL: http://localhost:8501
+  Network URL: http://10.41.56.10:8501
+  External URL: http://188.73.131.26:8501
+
+2025-02-10 21:09:53.797 Examining the path of torch.classes raised:
+Traceback (most recent call last):
+  File "/home/akozhevnikov/anaconda3/envs/gnn/lib/python3.10/site-packages/streamlit/watcher/local_sources_watcher.py", line 217, in get_module_paths
+    potential_paths = extract_paths(module)
+  File "/home/akozhevnikov/anaconda3/envs/gnn/lib/python3.10/site-packages/streamlit/watcher/local_sources_watcher.py", line 210, in <lambda>
+    lambda m: list(m.__path__._path),
+  File "/home/akozhevnikov/anaconda3/envs/gnn/lib/python3.10/site-packages/torch/_classes.py", line 13, in __getattr__
+    proxy = torch._C._get_custom_class_python_wrapper(self.name, attr)
+RuntimeError: Tried to instantiate class '__path__._path', but it does not exist! Ensure that it is registered via torch::class_
+2025-02-10 22:11:29.463 Examining the path of torch.classes raised:
+Traceback (most recent call last):
+  File "/home/akozhevnikov/anaconda3/envs/gnn/lib/python3.10/site-packages/streamlit/watcher/local_sources_watcher.py", line 217, in get_module_paths
+    potential_paths = extract_paths(module)
+  File "/home/akozhevnikov/anaconda3/envs/gnn/lib/python3.10/site-packages/streamlit/watcher/local_sources_watcher.py", line 210, in <lambda>
+    lambda m: list(m.__path__._path),
+  File "/home/akozhevnikov/anaconda3/envs/gnn/lib/python3.10/site-packages/torch/_classes.py", line 13, in __getattr__
+    proxy = torch._C._get_custom_class_python_wrapper(self.name, attr)
+RuntimeError: Tried to instantiate class '__path__._path', but it does not exist! Ensure that it is registered via torch::class_
+2025-02-10 22:14:01.637 Examining the path of torch.classes raised:
+Traceback (most recent call last):
+  File "/home/akozhevnikov/anaconda3/envs/gnn/lib/python3.10/site-packages/streamlit/watcher/local_sources_watcher.py", line 217, in get_module_paths
+    potential_paths = extract_paths(module)
+  File "/home/akozhevnikov/anaconda3/envs/gnn/lib/python3.10/site-packages/streamlit/watcher/local_sources_watcher.py", line 210, in <lambda>
+    lambda m: list(m.__path__._path),
+  File "/home/akozhevnikov/anaconda3/envs/gnn/lib/python3.10/site-packages/torch/_classes.py", line 13, in __getattr__
+    proxy = torch._C._get_custom_class_python_wrapper(self.name, attr)
+RuntimeError: Tried to instantiate class '__path__._path', but it does not exist! Ensure that it is registered via torch::class_
+  Stopping...

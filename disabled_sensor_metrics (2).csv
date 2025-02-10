@@ -1,4 +1,4 @@
-disabled_sensor,state_id,accuracy
+disabled_sensor,state_id,TPR
 -1.0,0.0,0.33899770654118205
 -1.0,1.0,0.00018542555164101615
 -1.0,2.0,0.9646727029835238
