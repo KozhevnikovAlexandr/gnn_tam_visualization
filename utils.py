@@ -71,7 +71,7 @@ colors = {0: 'rgb(113, 186, 255)',
           5: 'rgb(192, 192, 192)'}
 
 shapes = {0: 'box', 
-          1: 'dot'}
+          1: 'circle'}
 
 def get_node_color_and_shape(node_id):
     return (colors[nodes_description[node_id]['color']], shapes[nodes_description[node_id]['shape']])

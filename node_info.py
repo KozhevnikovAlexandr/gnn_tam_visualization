@@ -60,7 +60,7 @@ node_names = ['A feed (stream 1)',
 
 
 def get_node_info(node_id, topk=3):
-    result = f'{node_names[node_id]} \n \n Most significant faluts:'
+    result = f'{node_names[node_id]} \n \n Most significant faults:'
     top_importance = np.argpartition(importance_matrix[:,node_id], -topk)[-topk:].tolist()
     for ind, i in enumerate(top_importance):
         result += f'\n {i}. {baseline_metrics[i]["Description"]} -- {round(float(importance_matrix[:,node_id][i]), 2)}'

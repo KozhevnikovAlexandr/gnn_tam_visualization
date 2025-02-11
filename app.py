@@ -47,13 +47,12 @@ def create_visualization(nodes_to_zeros=[], top_k_nodes=2):
             color = 'red'
             shape = 'triangle'
         
-        net.add_node(node, label=str(node+1), physics=True, title=node_info, color=color, shape=shape, size=size)
+        net.add_node(node, label=str(node+1), physics=False, title=node_info, color=color, shape=shape, size=size, font={"size": 12})
     
     for node in range(adj.shape[0]):
         for node2 in range(adj.shape[0]):
             if adj[node, node2]:
-                net.add_edge(node, node2, physics=True)
-    net.show_buttons(filter_=['physics'])
+                net.add_edge(node, node2, physics=False)
     
     return net
 
@@ -96,29 +95,32 @@ def main():
         "Select top k important edges to show",
         range(1, 6),
         index=None,
-        placeholder="Choose k param"
+        placeholder="Choose k param",
     )
 
-    if st.button("Change k"):
-        top_k_nodes=selected_k
-    else:
-        top_k_nodes=top_k_nodes_base
-    
+    col1, col2, col3 = st.columns(3)
     flag = False
-    if st.button("Disable Node"):
-        flag = True
-        if selected_node is not None:
-            st.session_state.disabled_nodes = [selected_node]
-            st.session_state.metrics = calculate_metrics(get_baseline_metrics(), turn_off_node=selected_node)
-        else:
+    top_k_nodes = top_k_nodes_base
+    with col1:
+        if st.button("Change k") and selected_k is not None:
+            top_k_nodes = selected_k
+
+    with col2:
+        if st.button("Disable Node"):
+            flag = True
+            if selected_node is not None:
+                st.session_state.disabled_nodes = [selected_node]
+                st.session_state.metrics = calculate_metrics(get_baseline_metrics(), turn_off_node=selected_node)
+            else:
+                st.session_state.disabled_nodes = []
+                st.session_state.metrics = calculate_metrics(get_baseline_metrics(), turn_off_node=None)
+
+    with col3:
+        if st.button("Enable All Nodes"):
             st.session_state.disabled_nodes = []
             st.session_state.metrics = calculate_metrics(get_baseline_metrics(), turn_off_node=None)
-    
-    if st.button("Enable All Nodes"):
-        st.session_state.disabled_nodes = []
-        st.session_state.metrics = calculate_metrics(get_baseline_metrics(), turn_off_node=None)
-    
-    net = create_visualization(st.session_state.disabled_nodes, top_k_nodes=top_k_nodes)
+        
+        net = create_visualization(st.session_state.disabled_nodes, top_k_nodes=top_k_nodes)
     
     net.save_graph('graph.html')
     with open('graph.html', 'r', encoding='utf-8') as f:
@@ -177,11 +179,15 @@ def main():
         fig = px.bar(
             df,
             x='Fault №',
-            y=['diff_minus'],
+            y=['TPR Baseline', 'TPR New'],
             barmode='overlay',
             title='Comparison of TPR Baseline vs TPR New',
             labels={'value': 'TPR Value', 'variable': 'Metric Type'},
-            hover_data=['Description']
+            hover_data=['Description'],
+            color_discrete_map={
+                'TPR Baseline': 'blue',
+                'TPR New': 'red'
+            }
         )
         
         fig.update_layout(
@@ -189,7 +195,7 @@ def main():
             yaxis_title='TPR',
             xaxis={'type': 'category'},
             hovermode='x unified',
-            showlegend=False,
+            showlegend=True,
         )
     
     else:
