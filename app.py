@@ -16,7 +16,7 @@ top_k_nodes_base = 2
 def create_visualization(nodes_to_zeros=[], top_k_nodes=2):
     device = torch.device("cpu")
 
-    model_path = '/home/akozhevnikov/graphs/gnn_tam_visualization/gnn1_directed.pt'
+    model_path = 'gnn1_directed.pt'
     model = torch.load(model_path, map_location=device, weights_only=False).eval()
     n_nodes = model.idx.size(0)
     idx = torch.arange(n_nodes, device=device)
