@@ -1,0 +1,3 @@
+[submodule "modules/gnn-tam"]
+	path = modules/gnn-tam
+	url = https://github.com/K0mp0t/gnn-tam
