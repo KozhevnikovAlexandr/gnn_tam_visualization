@@ -66,4 +66,4 @@ Hover over any node to see a detailed tooltip with:
 
 [Click here to watch the demo video](https://www.youtube.com/watch?v=1958k_KO1_4)
 
-<iframe width="560" height="315" src="https://www.youtube.com/watch?v=1958k_KO1_4" title="Demo Video" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+https://www.youtube.com/watch?v=1958k_KO1_4
