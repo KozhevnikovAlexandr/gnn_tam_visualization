@@ -64,6 +64,4 @@ Hover over any node to see a detailed tooltip with:
 
 ## 📷 Video
 
-[Click here to watch the demo video](https://www.youtube.com/watch?v=1958k_KO1_4)
-
 https://www.youtube.com/watch?v=1958k_KO1_4
