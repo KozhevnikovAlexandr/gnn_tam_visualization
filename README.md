@@ -21,7 +21,7 @@ git clone https://github.com/KozhevnikovAlexandr/gnn-tam-visualization.git
 cd gnn-tam-visualization
 git submodule update --init --recursive
 conda env create -f environment.yml
-conda activate gnn-tam-vis
+conda activate gnn
 streamlit run app.py
 ```
 
