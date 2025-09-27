@@ -126,9 +126,9 @@ def get_node_color_and_shape(node_id):
     return (COLORS[nodes_description[node_id]['color']], SHAPES[nodes_description[node_id]['shape']])
 
 
-def get_node_info(baseline_metrics, node_id, topk=3):
+def get_node_info(baseline_metrics, node_importance_matrix, node_id, topk=3):
     result = f'{node_names[node_id]} \n \n Most significant faults:'
-    top_importance = np.argpartition(get_node_importance(node_id), -topk)[-topk:].tolist()
+    top_importance = np.argpartition(get_node_importance(node_importance_matrix, node_id), -topk)[-topk:].tolist()
     for _, i in enumerate(top_importance):
-        result += f'\n {i}. {baseline_metrics[i]["Description"]} -- {round(float(get_node_importance(node_id)[i]), 2)}'
+        result += f'\n {i}. {baseline_metrics[i]["Description"]} -- {round(float(get_node_importance(node_importance_matrix, node_id)[i]), 2)}'
     return result

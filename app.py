@@ -7,7 +7,8 @@ import importlib
 import os
 import sys
 
-from modules.utils import get_baseline_metrics, get_node_importance, get_metric_without_node, parse_model_params
+from modules.utils import (get_baseline_metrics, get_node_importance, get_metric_without_node, 
+                           parse_model_params, get_disabled_sensor_metrics, get_node_importance_matrix)
 from modules.node_info import get_node_info, get_node_color_and_shape, COLORS, SHAPES
 from modules.dataset_info import DATASET_INFO
 
@@ -24,7 +25,8 @@ if GNN_TAM is None:
 
 sys.path[:] = original_path
 
-st.session_state.top_k_nodes = 2
+if 'top_k_nodes' not in st.session_state:
+    st.session_state.top_k_nodes = 2
 st.set_page_config(layout="wide")
 
 st.title("Graph Visualization with Metrics")
@@ -39,9 +41,8 @@ def create_visualization(params_dict, nodes_to_zeros=[], top_k_nodes=2):
                     gsl_type=params_dict['gsl_type'],
                     n_hidden=int(params_dict['n_hidden']),
                     device=device)
-    model.load_state_dict(torch.load(model_path, map_location=device, weights_only=False))
+    model.load_state_dict(torch.load(st.session_state.model_path, map_location=device, weights_only=False))
     model.eval()
-    print(params_dict)
     n_nodes = model.idx.size(0)
     idx = torch.arange(n_nodes, device=device)
     gsl_module = model.gsl[0]
@@ -65,7 +66,7 @@ def create_visualization(params_dict, nodes_to_zeros=[], top_k_nodes=2):
     for node in range(adj.shape[0]):
         color, shape = get_node_color_and_shape(node)
         size = 20 if shape == 'box' else 13
-        node_info = get_node_info(st.session_state.baseline_metrics, node)
+        node_info = get_node_info(st.session_state.baseline_metrics, st.session_state.node_importance_matrix, node)
         if node+1 in nodes_to_zeros:
             node_info = f'This node is disabled\n\n{node_info}'
             color = 'red'
@@ -87,8 +88,8 @@ def calculate_metrics(baseline_metrics, turn_off_node=None):
             i['Diff'] = 0.0
             i['Disabled Node Importance'] = 0.0
     else:
-        metric_without_node = get_metric_without_node(turn_off_node)
-        imp = get_node_importance(turn_off_node)
+        metric_without_node = get_metric_without_node(st.session_state.disabled_sensor_metrics, turn_off_node)
+        imp = get_node_importance(st.session_state.node_importance_matrix, turn_off_node)
         for idx, i in enumerate(baseline_metrics):
             i['New TPR'] = metric_without_node[idx]
             i['Diff'] = round(i['New TPR'] - i['Baseline TPR'], 3)
@@ -100,7 +101,7 @@ def main():
         st.session_state.model_path = None
 
     model_options = ['Select model'] + [e for e in os.listdir('./models') if e.endswith('.pt')]
-    model_name = st.selectbox('select model', model_options)
+    model_name = st.selectbox('Please select a model to run a simulation on', model_options)
     if model_name != 'Select model':
         st.session_state.model_path = os.path.join('./models/', model_name)
     else:
@@ -108,14 +109,11 @@ def main():
 
     if st.session_state.model_path is not None:
         st.session_state.model_params_dict = parse_model_params(st.session_state.model_path)
-
-        if 'disabled_nodes' not in st.session_state:
-            st.session_state.disabled_nodes = []
-
-        if 'baseline_metrics' not in st.session_state:
-            st.session_state.baseline_metrics = calculate_metrics(get_baseline_metrics())
-        if 'metrics' not in st.session_state:
-            st.session_state.metrics = st.session_state.baseline_metrics
+        st.session_state.disabled_nodes = []
+        st.session_state.baseline_metrics = calculate_metrics(get_baseline_metrics(st.session_state.model_path))
+        st.session_state.metrics = st.session_state.baseline_metrics
+        st.session_state.node_importance_matrix = get_node_importance_matrix(st.session_state.model_path)
+        st.session_state.disabled_sensor_metrics = get_disabled_sensor_metrics(st.session_state.model_path)
 
         all_nodes = list(range(1, 53))
 
@@ -156,16 +154,21 @@ def main():
 
             net = create_visualization(st.session_state.model_params_dict, st.session_state.disabled_nodes,
                                        top_k_nodes=st.session_state.top_k_nodes)
+            options = """
+            var options = {
+            "edges": {
+                "smooth": false
+            }
+            }
+            """
+            net.set_options(options)
 
-        net.save_graph('graph.html')
-        with open('graph.html', 'r', encoding='utf-8') as f:
-            html = f.read()
         html = f"""
-        <div style="width: 100%; height: 100vh;">
-            {html}
+        <div style="width: 100%; height: 100%">
+            {net.generate_html()}
         </div>
         """
-        st.components.v1.html(html, height=800)
+        st.components.v1.html(html, height=610)
 
         with st.expander("LEGEND", expanded=True):
             col1, col2, col3 = st.columns([2,2,1])
