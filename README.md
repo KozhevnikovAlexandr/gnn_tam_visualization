@@ -13,15 +13,46 @@ Validated on **Tennessee Eastman Process (TEP)** benchmarks, this tool bridges t
 
 ---
 
-
-## 🚀 Run
+## 🕹️ Installation
 
 ```bash
 git clone https://github.com/KozhevnikovAlexandr/gnn-tam-visualization.git
 cd gnn-tam-visualization
 git submodule update --init --recursive
 conda env create -f environment.yml
-conda activate gnn
+```
+
+---
+
+
+## 🚀 Run with provided models/data
+
+```bash
+conda activate gnn_tam_vis
+streamlit run app.py
+```
+
+---
+
+## 🔮 Run with custom models/data
+
+Train your model and put it into ```./models```:
+```bash
+python ./modules/gnn-tam/train.py
+cp ./modules/gnn-tam/saved_models/YOUR_MODEL.pt ./models
+```
+
+Precompute necessary data:
+```bash
+python ./compute_node_importance.py YOUR_MODEL_PATH
+python ./compute_disabled_sensor_metrics.py YOUR_MODEL_PATH
+python ./compute_baseline_metrics.py YOUR_MODEL_PATH
+```
+
+Run the app
+
+```bash
+conda activate gnn_tam_vis
 streamlit run app.py
 ```
 
